@@ -1,12 +1,13 @@
 package com.nwp.annotations;
 
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
+import java.lang.annotation.*;
 
+/**
+ * Mark a class as a bean that should be managed by the IoC container.
+ */
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
+@Inherited
 public @interface Bean {
-    boolean scope() default true;
+    String scope() default "singleton";
 }
