@@ -1,5 +1,7 @@
 package com.nwp.server;
 
+import com.nwp.framework.di.DIEngine;
+import com.nwp.framework.discovery.DiscoveryEngine;
 import com.nwp.framework.request.Header;
 import com.nwp.framework.request.Helper;
 import com.nwp.framework.request.Request;
@@ -18,7 +20,12 @@ public class ServerThread implements Runnable {
     private final BufferedReader reader;
     private final PrintWriter writer;
 
+    private final DiscoveryEngine discoveryEngine;
+    private final DIEngine diEngine;
+
     public ServerThread(Socket socket) throws IOException {
+        this.discoveryEngine = DiscoveryEngine.getInstance();
+        this.diEngine = DIEngine.getInstance();
         this.socket = socket;
         this.reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
         this.writer = new PrintWriter(new BufferedWriter(new OutputStreamWriter(socket.getOutputStream())), true);
@@ -27,8 +34,21 @@ public class ServerThread implements Runnable {
     @Override
     public void run() {
         try {
-            Optional<Request> request = generateRequest();
-            request.ifPresentOrElse(this::processRequest, this::closeConnection);
+            // Read the request and process it
+            generateRequest().ifPresentOrElse(req -> {
+                discoveryEngine.getRoutes().stream()
+                        .filter(route -> route.getRoute().equalsIgnoreCase(req.getLocation()) && route.getMethod().equalsIgnoreCase(req.getMethod().toString()))
+                        .findFirst()
+                        .ifPresent(route -> {
+                            try {
+                                diEngine.initialize(route.getController().getName());
+                            } catch (Exception e) {
+                                e.printStackTrace();
+                            }
+                        });
+                processRequest(req);
+            }, this::closeConnection);
+
         } catch (IOException | RequestNotValidException e) {
             e.printStackTrace();
         } finally {
