@@ -21,6 +21,9 @@ public class DIContainer {
                 .filter(clazz -> clazz.isAnnotationPresent(Qualifier.class))
                 .forEach(clazz -> {
                     Qualifier qualifier = clazz.getAnnotation(Qualifier.class);
+                    if (implementations.containsKey(qualifier.value())) {
+                        throw new RuntimeException("Multiple @Bean classes with the same @Qualifier value: " + qualifier.value());
+                    }
                     implementations.put(qualifier.value(), clazz);
                 });
     }
