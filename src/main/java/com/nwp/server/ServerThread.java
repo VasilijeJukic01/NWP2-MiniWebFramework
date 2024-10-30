@@ -97,7 +97,7 @@ public class ServerThread implements Runnable {
     }
 
     private Map<String, String> readPostParameters(Header header) throws IOException {
-        int contentLength = Integer.parseInt(header.get("content-length"));
+        int contentLength = Integer.parseInt(header.get("Content-Length"));
         char[] buff = new char[contentLength];
         reader.read(buff, 0, contentLength);
         String parametersString = new String(buff);

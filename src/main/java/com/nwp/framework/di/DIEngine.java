@@ -83,6 +83,9 @@ public class DIEngine {
     }
 
     private Class<?> resolveFieldClass(Field field) throws ClassNotFoundException {
+        if (field.getType().isInterface() && !field.isAnnotationPresent(Qualifier.class)) {
+            throw new RuntimeException("Field of type Interface is annotated with @Autowired but not with @Qualifier: " + field.getName());
+        }
         return field.getType().isInterface()
                 ? Optional.ofNullable(field.getAnnotation(Qualifier.class))
                     .map(qualifier -> container.getImplementation(qualifier.value()))
@@ -100,7 +103,7 @@ public class DIEngine {
         else if (clazz.isAnnotationPresent(Component.class)) {
             return constructor.newInstance();
         }
-        return constructor.newInstance();
+        throw new RuntimeException("Field annotated with @Autowired is not a @Bean, @Service or @Component: " + clazz.getName());
     }
 
     private void verbose(Field field, Object parent, Object obj) {
